@@ -5,10 +5,12 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 void main() {
-  runApp(TypingTestApp());
+  runApp(const TypingTestApp());
 }
 
 class TypingTestApp extends StatelessWidget {
+  const TypingTestApp({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -71,6 +73,12 @@ class _TypingHomePageState extends State<TypingHomePage> {
     _startLevel();
   }
 
+  @override
+  void dispose() {
+    timer?.cancel(); // Dispose of the timer to avoid memory leaks
+    super.dispose();
+  }
+
   void _startLevel() {
     setState(() {
       currentText = levels[currentLevel].getRandomText();
@@ -80,40 +88,36 @@ class _TypingHomePageState extends State<TypingHomePage> {
       stopwatch.reset();
       stopwatch.start();
       timer?.cancel();
-      timer = Timer.periodic(Duration(seconds: 1), (_) {
+      timer = Timer.periodic(const Duration(seconds: 1), (_) {
         setState(() {
           elapsedSeconds++;
-          int acc = _calculateAccuracy();
-          accuracyProgress.add(acc);
+          accuracyProgress.add(_calculateAccuracy());
         });
       });
     });
   }
 
   int _calculateAccuracy() {
-    int correct = 0;
-    int len = min(currentText.length, userInput.length);
-    for (int i = 0; i < len; i++) {
-      if (currentText[i] == userInput[i]) correct++;
-    }
-    return ((correct / currentText.length) * 100).round();
+  int correct = 0;
+  int len = min(currentText.length, userInput.length);
+  for (int i = 0; i < len; i++) {
+    if (currentText[i] == userInput[i]) correct++;
   }
+  return ((correct / currentText.length) * 100).round();
+}
 
   double _calculateWPM() {
     if (elapsedSeconds == 0) return 0;
-    int charCount = userInput.length;
-    return (charCount / 5) / (elapsedSeconds / 60);
+    return (userInput.length / 5) / (elapsedSeconds / 60);
   }
 
   void _submit() {
     stopwatch.stop();
     timer?.cancel();
-    int accuracy = _calculateAccuracy();
+    final accuracy = _calculateAccuracy();
     if (accuracy >= levels[currentLevel].minAccuracy) {
       if (currentLevel < levels.length - 1) {
-        setState(() {
-          currentLevel++;
-        });
+        setState(() => currentLevel++);
         _startLevel();
       } else {
         _showResultDialog("🎉 All levels completed!");
@@ -127,19 +131,17 @@ class _TypingHomePageState extends State<TypingHomePage> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text("Result"),
+        title: const Text("Result"),
         content: Text(message),
         actions: [
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
-              setState(() {
-                currentLevel = 0;
-              });
+              setState(() => currentLevel = 0);
               _startLevel();
             },
-            child: Text("Restart"),
-          )
+            child: const Text("Restart"),
+          ),
         ],
       ),
     );
@@ -151,14 +153,14 @@ class _TypingHomePageState extends State<TypingHomePage> {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not launch video')),
+        const SnackBar(content: Text('Could not launch video')),
       );
     }
   }
 
   Widget _buildChart() {
     return accuracyProgress.length < 2
-        ? Text("Graph will appear after a few seconds of typing.")
+        ? const Text("Graph will appear after a few seconds of typing.")
         : SizedBox(
             height: 200,
             child: LineChart(
@@ -177,10 +179,12 @@ class _TypingHomePageState extends State<TypingHomePage> {
                 borderData: FlBorderData(show: true),
                 lineBarsData: [
                   LineChartBarData(
-                    spots: [
-                      for (int i = 0; i < accuracyProgress.length; i++)
-                        FlSpot(i.toDouble(), accuracyProgress[i].toDouble())
-                    ],
+                    spots: accuracyProgress
+                        .asMap()
+                        .entries
+                        .map((entry) =>
+                            FlSpot(entry.key.toDouble(), entry.value.toDouble()))
+                        .toList(),
                     isCurved: true,
                     color: Colors.blue,
                     barWidth: 3,
@@ -200,41 +204,39 @@ class _TypingHomePageState extends State<TypingHomePage> {
     return Scaffold(
       appBar: AppBar(title: Text("Level: ${level.name}")),
       body: Padding(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         child: SingleChildScrollView(
           child: Column(
             children: [
               ElevatedButton.icon(
-                icon: Icon(Icons.play_circle_fill),
+                icon: const Icon(Icons.play_circle_fill),
                 label: Text("Watch Guide for ${level.name}"),
                 onPressed: () => _launchVideo(level.videoUrl),
               ),
-              SizedBox(height: 20),
-              Text("Type this:", style: TextStyle(fontSize: 16)),
-              SizedBox(height: 10),
+              const SizedBox(height: 20),
+              const Text("Type this:", style: TextStyle(fontSize: 16)),
+              const SizedBox(height: 10),
               Text(currentText,
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              SizedBox(height: 20),
+                  style: const TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 20),
               TextField(
                 maxLines: null,
-                onChanged: (val) {
-                  setState(() {
-                    userInput = val;
-                  });
-                },
-                decoration: InputDecoration(
+                onChanged: (val) => setState(() => userInput = val),
+                decoration: const InputDecoration(
                   border: OutlineInputBorder(),
                   hintText: 'Start typing here...',
                 ),
               ),
-              SizedBox(height: 20),
-              ElevatedButton(onPressed: _submit, child: Text("Submit")),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
+              ElevatedButton(onPressed: _submit, child: const Text("Submit")),
+              const SizedBox(height: 20),
               Text("Time: $elapsedSeconds sec"),
               Text("Accuracy: ${_calculateAccuracy()}%"),
               Text("WPM: ${_calculateWPM().round()}"),
-              Divider(),
-              Text("Accuracy Graph", style: TextStyle(fontWeight: FontWeight.bold)),
+              const Divider(),
+              const Text("Accuracy Graph",
+                  style: TextStyle(fontWeight: FontWeight.bold)),
               _buildChart(),
             ],
           ),
