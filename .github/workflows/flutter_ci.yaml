@@ -17,7 +17,7 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: 'stable'  # Automatically fetch the latest stable Flutter version
+          flutter-version: '3.10.0' # Update to a compatible Flutter version
 
       - name: Install dependencies
         run: flutter pub get
