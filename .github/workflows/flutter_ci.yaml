@@ -16,7 +16,7 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: stable # Use the stable channel to support Dart SDK ^3.7.x
+          flutter-version: '3.13.0' # Explicitly specify a stable Flutter version
 
       - name: Install dependencies
         run: flutter pub get
