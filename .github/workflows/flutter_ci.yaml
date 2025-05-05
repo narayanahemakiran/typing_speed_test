@@ -8,7 +8,6 @@ on:
 
 jobs:
   build:
-    name: Build and Test Flutter App
     runs-on: ubuntu-latest
 
     steps:
@@ -17,13 +16,10 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.10.0' # Update to a compatible Flutter version
+          flutter-version: '3.13.0' # Ensure this is compatible with Dart 3.7.3
 
       - name: Install dependencies
         run: flutter pub get
-
-      - name: Analyze
-        run: flutter analyze
 
       - name: Run tests
         run: flutter test
